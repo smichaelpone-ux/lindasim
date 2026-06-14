@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#A81221">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="LindaSim">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&display=swap" rel="stylesheet">
+<title>LindaSim</title>
+<style>
+  :root{
+    --bg:#FFF7EA; --surface:#FFFFFF; --ink:#2A1A14; --muted:#8A7A66;
+    --line:#ECDFC6; --primary:#C2152A; --primary-press:#9E1020;
+    --red-deep:#A81221; --gold:#F2B705; --gold-deep:#D99A00; --soft:#FBEAD0;
+    --paid:#2E7D4F; --paid-bg:#E6F2EB; --deliver:#2563A8; --deliver-bg:#E5EEF7;
+    --danger:#C0392B; --shadow:0 2px 10px rgba(80,40,20,.10);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,"Segoe UI",Roboto,system-ui,sans-serif;
+    background:var(--bg); color:var(--ink); font-size:18px; line-height:1.45;
+    padding-bottom:120px;
+  }
+  .wrap{max-width:560px;margin:0 auto;padding:0 16px}
+
+  /* Header */
+  header{position:sticky;top:0;z-index:30;background:var(--red-deep);
+    padding:14px 0;border-bottom:4px solid var(--gold)}
+  header .wrap{display:flex;align-items:center;gap:12px}
+  .logo{width:54px;height:54px;border-radius:50%;object-fit:cover;
+    border:3px solid var(--gold);box-shadow:0 2px 8px rgba(0,0,0,.3);flex-shrink:0}
+  h1{font-family:"Archivo Black","Arial Black",Impact,sans-serif;
+    font-size:26px;font-weight:400;margin:0;color:var(--gold);text-transform:uppercase;
+    letter-spacing:.02em;line-height:1;
+    text-shadow:0 2px 0 #6e0b13,0 3px 0 #6e0b13,0 4px 6px rgba(0,0,0,.35)}
+  .sub{color:#F4D98C;font-size:13px;margin-top:6px;font-weight:600}
+
+  /* Filter chips */
+  .filters{display:flex;gap:8px;padding:12px 0 4px}
+  .chip{flex:1;border:2px solid var(--line);background:var(--surface);color:var(--muted);
+    border-radius:14px;padding:10px 4px;font-size:15px;font-weight:700;text-align:center;cursor:pointer}
+  .chip.on{border-color:var(--primary);color:var(--primary);background:var(--soft)}
+  .maintabs{display:flex;gap:10px;padding:14px 0 0}
+  .maintab{flex:1;display:flex;align-items:center;justify-content:center;gap:13px;
+    border:none;border-radius:16px;padding:16px 6px;font-size:18px;font-weight:800;cursor:pointer}
+  .maintab .n{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;
+    padding:0 7px;border:2px solid #fff;border-radius:9px;font-size:15px;font-weight:800;line-height:1}
+  .maintab.pending{background:var(--primary);color:var(--gold)}
+  .maintab.done{background:var(--paid);color:#fff}
+  .maintab:not(.on){opacity:.5}
+  .maintab.on{box-shadow:0 3px 10px rgba(0,0,0,.18)}
+  .chip .n{display:block;font-size:13px;font-weight:600;opacity:.8}
+
+  /* Order card */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;
+    padding:16px;margin:12px 0;box-shadow:var(--shadow);cursor:pointer}
+  .card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+  .namerow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-width:0}
+  .datepill{border:1.5px solid var(--primary);color:var(--primary);border-radius:8px;
+    padding:2px 9px;font-size:13px;font-weight:800;white-space:nowrap}
+  .datefield{position:relative;display:flex;align-items:center;gap:10px;
+    background:var(--surface);border:2px solid var(--line);border-radius:14px;padding:15px 16px}
+  .datefield .dateicon{font-size:18px}
+  .datefield .datetext{font-size:17px;font-weight:700;color:var(--ink)}
+  .datefield input[type=date]{position:absolute;inset:0;width:100%;height:100%;
+    margin:0;padding:0;border:none;background:transparent;opacity:0;cursor:pointer}
+  .name{font-size:20px;font-weight:800}
+  .total{font-size:20px;font-weight:800;white-space:nowrap}
+  .items{color:var(--muted);font-size:15px;margin:6px 0 12px}
+  .dest{color:var(--muted);font-size:14px;margin:-6px 0 12px;display:flex;align-items:flex-start;gap:6px;line-height:1.35}
+  .dest .di{flex-shrink:0}
+  .badges{display:flex;gap:8px;flex-wrap:wrap}
+  .badge{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;
+    padding:6px 12px;border-radius:999px;border:2px solid var(--line);color:var(--muted)}
+  .badge.paid-on{background:var(--paid-bg);color:var(--paid);border-color:var(--paid)}
+  .badge.deliver-on{background:var(--deliver-bg);color:var(--deliver);border-color:var(--deliver)}
+
+  /* Empty */
+  .empty{text-align:center;color:var(--muted);padding:60px 20px}
+  .empty .big{font-size:48px;margin-bottom:10px}
+
+  /* Bottom add bar */
+  .addbar{position:fixed;left:0;right:0;bottom:0;z-index:40;
+    background:linear-gradient(to top,var(--bg) 70%,transparent);padding:12px 16px 18px}
+  .addbar .wrap{padding:0}
+  .btn{width:100%;border:none;border-radius:16px;font-size:19px;font-weight:800;
+    padding:18px;cursor:pointer;color:#fff;background:var(--primary)}
+  .btn:active{background:var(--primary-press)}
+
+  /* Form view */
+  .view{display:none}
+  .view.active{display:block}
+  .formhead{position:sticky;top:0;z-index:30;background:var(--bg);
+    display:flex;align-items:center;gap:12px;padding:16px 0;border-bottom:1px solid var(--line)}
+  .back{font-size:17px;font-weight:700;color:var(--primary);background:none;border:none;cursor:pointer;padding:6px 0}
+  .field{margin:18px 0}
+  label{display:block;font-size:15px;font-weight:700;color:var(--muted);margin-bottom:8px}
+  input[type=text],input[type=tel],textarea{
+    width:100%;border:2px solid var(--line);border-radius:14px;background:var(--surface);
+    font-size:18px;padding:14px;color:var(--ink);font-family:inherit}
+  input:focus,textarea:focus{outline:none;border-color:var(--primary)}
+  textarea{min-height:80px;resize:vertical}
+  .name-wrap{position:relative}
+  .name-wrap.has-btn input{padding-right:58px}
+  .contactbtn{position:absolute;top:50%;right:8px;transform:translateY(-50%);
+    border:2px solid var(--gold);background:#FCEACB;color:var(--primary);border-radius:10px;
+    width:44px;height:40px;padding:0;font-size:20px;align-items:center;justify-content:center;cursor:pointer}
+  .contactbtn:active{background:var(--gold)}
+
+  .section-label{font-size:15px;font-weight:800;color:var(--ink);margin:24px 0 4px}
+
+  /* Item rows */
+  .item{display:flex;align-items:center;justify-content:space-between;gap:10px;
+    background:var(--surface);border:1px solid var(--line);border-radius:16px;
+    padding:12px 14px;margin:10px 0}
+  .item.has{border-color:var(--primary);background:#FFFCF8}
+  .item .info{flex:1;min-width:0}
+  .menu-btn{border:2px solid var(--gold);background:transparent;color:var(--gold);
+    border-radius:14px;padding:10px 14px;font-size:15px;font-weight:800;cursor:pointer;white-space:nowrap}
+  .menu-btn:active{background:rgba(242,183,5,.18)}
+  .toolbar{display:flex;gap:10px;padding:12px 0 0}
+  .tool{flex:1;border:2px solid var(--line);background:var(--surface);color:var(--primary);
+    border-radius:14px;padding:13px;font-size:15px;font-weight:800;cursor:pointer}
+  .tool:active{background:var(--soft)}
+  /* Paid / delivered checkboxes */
+  .checks{display:flex;gap:10px;flex-wrap:wrap}
+  .check{display:inline-flex;align-items:center;gap:9px;cursor:pointer;
+    border:2px solid var(--line);background:var(--surface);border-radius:12px;
+    padding:10px 14px;font-size:16px;font-weight:800;color:var(--muted);user-select:none}
+  .check .box{width:26px;height:26px;border-radius:8px;border:2px solid #CBBDA3;
+    background:#fff;display:flex;align-items:center;justify-content:center;
+    font-size:17px;font-weight:900;color:#fff;line-height:1}
+  .check.paid-on{color:var(--paid);border-color:var(--paid);background:var(--paid-bg)}
+  .check.paid-on .box{background:var(--paid);border-color:var(--paid)}
+  .check.deliver-on{color:var(--paid);border-color:var(--paid);background:var(--paid-bg)}
+  .check.deliver-on .box{background:var(--paid);border-color:var(--paid)}
+  /* Summary */
+  .monthnav{display:flex;align-items:center;justify-content:space-between;
+    background:var(--surface);border:2px solid var(--line);border-radius:14px;
+    padding:8px 10px;margin:10px 0 16px}
+  .monthnav button{width:46px;height:46px;border:none;background:var(--soft);color:var(--primary);
+    border-radius:10px;font-size:24px;font-weight:800;cursor:pointer}
+  .monthnav span{font-size:18px;font-weight:800}
+  .statrow{display:flex;justify-content:space-between;align-items:center;
+    background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:14px 16px;margin:8px 0;box-shadow:var(--shadow)}
+  .statrow .lbl{font-size:16px;font-weight:700;color:var(--muted)}
+  .statrow .val{font-size:20px;font-weight:800}
+  .statrow.big .val{font-size:24px;color:var(--paid)}
+  .preprow{display:flex;justify-content:space-between;
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    padding:12px 16px;margin:8px 0;font-size:17px}
+  .preprow b{font-weight:800}
+  /* Install (PWA) bar */
+  .installbar{display:none;align-items:center;gap:10px;background:#FFF3D6;
+    border:2px solid var(--gold);border-radius:14px;padding:12px 14px;margin:12px 0 0}
+  .installbar.show{display:flex}
+  .installbar .txt{flex:1;font-size:14px;font-weight:700;color:#8a5a00;line-height:1.35}
+  .installbar .go{border:none;border-radius:11px;padding:11px 16px;font-weight:800;cursor:pointer;
+    background:var(--primary);color:#fff;font-size:15px;white-space:nowrap}
+  .installbar .x{border:none;background:transparent;color:var(--muted);font-size:20px;cursor:pointer;padding:4px 6px}
+  /* Header toolbar (in red banner) */
+  .htoolbar{display:flex;gap:10px;padding:12px 0 2px}
+  .htool{width:100%;border:2px solid var(--gold);background:#FCEACB;color:var(--primary);
+    border-radius:12px;padding:9px 12px;font-size:14px;font-weight:800;cursor:pointer;white-space:nowrap}
+  .htool:active{background:var(--gold)}
+  .titleblock{flex:1;min-width:0}
+  .headbtns{display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+  /* Card special-request note */
+  .cardnote{background:#FFF3D6;border-left:4px solid var(--gold);border-radius:8px;
+    padding:8px 12px;margin:0 0 12px;font-size:15px;font-weight:700;color:#8a5a00}
+  /* Summary sections */
+  .sumsection{margin:18px 0 8px}
+  .sumhead{font-size:18px;font-weight:800;color:#fff;border-radius:14px;padding:13px 16px;margin-bottom:4px}
+  .sumhead.prep{background:var(--primary)}
+  .sumhead.report{background:var(--gold-deep)}
+  .sumhead.backup{background:var(--paid)}
+  .bkbtn{width:100%;border:2px solid var(--paid);background:var(--paid-bg);color:var(--paid);
+    border-radius:14px;padding:15px;font-size:16px;font-weight:800;cursor:pointer;margin-top:10px}
+  .bkbtn.alt{background:var(--surface);border-color:var(--line);color:var(--ink)}
+  .bkbtn:active{filter:brightness(.95)}
+  /* Themed modal (replaces browser alert/confirm) */
+  .modal-overlay{position:fixed;inset:0;background:rgba(40,20,10,.55);z-index:100;
+    display:none;align-items:center;justify-content:center;padding:24px}
+  .modal-overlay.show{display:flex}
+  .modal-card{background:var(--surface);border-radius:20px;max-width:380px;width:100%;
+    padding:24px;box-shadow:0 12px 44px rgba(0,0,0,.32);border-top:6px solid var(--gold)}
+  .modal-card p{font-size:18px;font-weight:700;margin:0 0 22px;color:var(--ink);line-height:1.45}
+  .modal-btns{display:flex;gap:10px;justify-content:flex-end}
+  .modal-btns button{border:none;border-radius:13px;padding:13px 22px;font-size:16px;font-weight:800;cursor:pointer}
+  .mb-cancel{background:var(--soft);color:var(--ink)}
+  .mb-ok{background:var(--primary);color:#fff}
+  .mb-ok.danger{background:var(--danger)}
+  .hint{color:var(--muted);font-size:15px;margin:4px 0 18px}
+  .item .info .iname{font-size:18px;font-weight:700}
+  .item .info .iprice{font-size:14px;color:var(--muted)}
+  .stepper{display:flex;align-items:center;gap:0}
+  .step{width:46px;height:46px;border-radius:12px;border:2px solid var(--line);
+    background:var(--surface);font-size:26px;font-weight:700;color:var(--primary);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;line-height:1;
+    touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+  .step:active{background:var(--soft)}
+  .qty{min-width:42px;text-align:center;font-size:20px;font-weight:800}
+
+  .custom-row{display:flex;gap:8px;align-items:center}
+  .custom-row input{flex:1}
+  .custom-row .price-in{max-width:130px}
+  .remove{background:none;border:none;color:var(--danger);font-size:22px;cursor:pointer;padding:6px}
+  .addmore{width:100%;background:var(--soft);color:var(--primary);border:2px dashed var(--primary);
+    border-radius:14px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;margin-top:6px}
+
+  /* Status toggles in form */
+  .toggles{display:flex;gap:10px;margin-top:8px}
+  .toggle{flex:1;border:2px solid var(--line);background:var(--surface);border-radius:14px;
+    padding:14px;font-size:16px;font-weight:700;color:var(--muted);cursor:pointer;text-align:center}
+  .toggle.paid-on{background:var(--paid-bg);color:var(--paid);border-color:var(--paid)}
+  .toggle.deliver-on{background:var(--deliver-bg);color:var(--deliver);border-color:var(--deliver)}
+
+  /* Sticky total + save */
+  .savebar{margin-top:22px;background:var(--surface);border-top:2px solid var(--line)}
+  .savebar .wrap{padding:18px 16px 8px}
+  .totalrow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+  .totalrow .lbl{font-size:16px;font-weight:700;color:var(--muted)}
+  .totalrow .amt{font-size:30px;font-weight:900;color:var(--ink)}
+  .delete{width:100%;background:none;border:none;color:var(--danger);font-size:15px;
+    font-weight:700;padding:14px;margin-top:8px;cursor:pointer}
+</style>
+</head>
+<body>
+
+<!-- LIST VIEW -->
+<div id="listView" class="view active">
+  <header>
+    <div class="wrap">
+        <img class="logo" src="data:image/jpeg;base64,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" alt="LindaSim rose bun">
+        <div class="titleblock">
+          <h1>LindaSim</h1>
+          <div class="sub" id="countSub"></div>
+        </div>
+        <div class="headbtns">
+          <button class="htool" onclick="openMenuEditor()">🍞 Menu</button>
+          <button class="htool" onclick="openSummary()">📙 Ringkasan</button>
+        </div>
+    </div>
+  </header>
+  <div class="wrap">
+    <div class="installbar" id="installBar">
+      <span class="txt">Pasang LindaSim seperti aplikasi di layar utama</span>
+      <button class="go" id="installGo">Pasang</button>
+      <button class="x" id="installX" aria-label="Tutup">✕</button>
+    </div>
+    <div class="maintabs">
+      <button class="maintab pending on" data-tab="pending" onclick="setTab('pending')">Pending<span class="n" id="cPending"></span></button>
+      <button class="maintab done" data-tab="done" onclick="setTab('done')">Selesai<span class="n" id="cDone"></span></button>
+    </div>
+    <div class="filters" id="subFilters">
+      <button class="chip on" data-f="all">Semua<span class="n" id="cAll"></span></button>
+      <button class="chip" data-f="unpaid">Belum Bayar<span class="n" id="cUnpaid"></span></button>
+      <button class="chip" data-f="undelivered">Belum Kirim<span class="n" id="cUndel"></span></button>
+    </div>
+    <div id="orderList"></div>
+  </div>
+  <div class="addbar">
+    <div class="wrap"><button class="btn" onclick="openForm()">+ Pesanan Baru</button></div>
+  </div>
+</div>
+
+<!-- FORM VIEW -->
+<div id="formView" class="view">
+  <div class="wrap">
+    <div class="formhead">
+      <button class="back" onclick="closeForm()">‹ Kembali</button>
+      <strong id="formTitle" style="font-size:18px">Pesanan Baru</strong>
+    </div>
+
+    <div class="field">
+      <label>Nama Pemesan</label>
+      <div class="name-wrap">
+        <input type="text" id="fName" placeholder="">
+        <button type="button" class="contactbtn" id="pickContact" style="display:none" aria-label="Pilih dari Kontak" title="Pilih dari Kontak">📇</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Nomor HP</label>
+      <input type="tel" id="fPhone" placeholder="" inputmode="tel">
+    </div>
+    <div class="field">
+      <label>Alamat</label>
+      <input type="text" id="fAddr" placeholder="">
+    </div>
+    <div class="field">
+      <label>Tanggal</label>
+      <div class="datefield">
+        <span class="dateicon">📅</span>
+        <span class="datetext" id="dateText"></span>
+        <input type="date" id="fDate" aria-label="Pilih tanggal">
+      </div>
+    </div>
+
+    <div class="section-label">Pesanan</div>
+    <div id="menuList"></div>
+    <div id="customList"></div>
+    <button class="addmore" onclick="addCustom()">+ Tambah barang lain</button>
+
+    <div class="field" style="margin-top:22px">
+      <label>Catatan (opsional)</label>
+      <input type="text" id="fRemarks" placeholder="">
+    </div>
+
+    <div class="section-label">Status</div>
+    <div class="checks">
+      <span class="check" id="tPaid" onclick="toggleStatus('paid')"><span class="box"></span>Bayar</span>
+      <span class="check" id="tDeliver" onclick="toggleStatus('delivered')"><span class="box"></span>Kirim</span>
+    </div>
+
+    <button class="delete" id="deleteBtn" onclick="deleteOrder()" style="display:none">Hapus pesanan ini</button>
+  </div>
+
+  <div class="savebar">
+    <div class="wrap">
+      <div class="totalrow">
+        <span class="lbl">Total</span>
+        <span class="amt" id="formTotal">Rp 0</span>
+      </div>
+      <button class="btn" onclick="saveOrder()">Simpan Pesanan</button>
+    </div>
+  </div>
+</div>
+
+<!-- MENU EDITOR VIEW -->
+<div id="menuView" class="view">
+  <div class="wrap">
+    <div class="formhead">
+      <button class="back" onclick="closeMenuEditor()">‹ Kembali</button>
+      <strong style="font-size:18px">Atur Menu</strong>
+    </div>
+    <p class="hint">Ubah harga, hapus, atau tambah barang. Pesanan yang sudah disimpan tidak akan berubah.</p>
+    <div id="menuEditList"></div>
+    <button class="addmore" onclick="addMenuItem()">+ Tambah barang baru</button>
+    <p class="hint" style="margin-top:22px">Bagikan link form pesanan ke pelanggan supaya mereka bisa pesan sendiri. Link akan memakai menu di atas (akan ikut disimpan).</p>
+    <button class="btn" style="background:var(--gold-deep)" onclick="shareOrderForm()">📤 Bagikan Form Pesanan</button>
+  </div>
+  <div class="savebar">
+    <div class="wrap">
+      <button class="btn" onclick="saveMenuEditor()">Simpan Menu</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUMMARY VIEW -->
+<div id="summaryView" class="view">
+  <div class="wrap">
+    <div class="formhead">
+      <button class="back" onclick="closeSummary()">‹ Kembali</button>
+      <strong style="font-size:18px">Ringkasan</strong>
+    </div>
+
+    <div class="sumsection">
+      <div class="sumhead prep">🧺 Perlu Disiapkan</div>
+      <p class="hint">Jumlah tiap barang dari semua pesanan yang <b>belum dikirim</b> — panduan untuk produksi.</p>
+      <div id="prepList"></div>
+    </div>
+
+    <div class="sumsection">
+      <div class="sumhead report">💰 Laporan Penjualan Bulanan</div>
+      <div class="monthnav">
+        <button onclick="changeMonth(-1)">‹</button>
+        <span id="monthLabel"></span>
+        <button onclick="changeMonth(1)">›</button>
+      </div>
+      <div id="monthStats"></div>
+    </div>
+
+    <div class="sumsection">
+      <div class="sumhead backup">💾 Cadangan Data</div>
+      <p class="hint">Simpan semua pesanan &amp; menu ke satu berkas. Lakukan sesekali, terutama sebelum ganti HP atau membersihkan browser. Untuk memulihkan, pilih berkas cadangan.</p>
+      <button class="bkbtn" onclick="exportData()">⬇️ Simpan Cadangan ke Berkas</button>
+      <button class="bkbtn alt" onclick="importFile.click()">⬆️ Pulihkan dari Berkas</button>
+      <input type="file" id="importFile" accept="application/json,.json" style="display:none">
+    </div>
+    <div style="height:30px"></div>
+  </div>
+</div>
+
+<div id="modal" class="modal-overlay">
+  <div class="modal-card">
+    <p id="modalMsg"></p>
+    <div class="modal-btns" id="modalBtns"></div>
+  </div>
+</div>
+
+<script>
+const DEFAULT_MENU = [
+  {name:'Pao Lengkap',       price:23000},
+  {name:'Pao Tausa',         price:15000},
+  {name:'Pao Kelapa',        price:15000},
+  {name:'Pao Coklat',        price:15000},
+  {name:'Bakzhang',          price:75000},
+  {name:'Mooncake Mini',     price:200000},
+  {name:'Mooncake Standard', price:320000},
+  {name:'Nastar',            price:200000},
+  {name:'Coffee Cookies',    price:150000},
+  {name:'Roti Bakso',        price:125000},
+];
+const KEY = 'bakeryOrders_v1';
+const MENU_KEY = 'bakeryMenu_v1';
+const MIG_KEY = 'bakeryMigrations_v1';
+let MENU = loadMenu();
+function loadMenu(){ try{ const m=JSON.parse(localStorage.getItem(MENU_KEY)); return (Array.isArray(m)&&m.length)?m:DEFAULT_MENU.slice() }catch(e){ return DEFAULT_MENU.slice() } }
+function saveMenu(){ localStorage.setItem(MENU_KEY, JSON.stringify(MENU)) }
+// One-time: append newly-added catalogue items to an existing saved menu without disturbing edits
+(function migrate(){
+  let done={}; try{ done=JSON.parse(localStorage.getItem(MIG_KEY))||{} }catch(e){}
+  if(!done.items_2026_06){
+    [{name:'Nastar',price:200000},{name:'Coffee Cookies',price:150000},{name:'Roti Bakso',price:125000}]
+      .forEach(a=>{ if(!MENU.some(m=>m.name===a.name)) MENU.push(a); });
+    saveMenu();
+    done.items_2026_06=true; localStorage.setItem(MIG_KEY, JSON.stringify(done));
+  }
+})();
+
+let orders = load();
+let filter = 'all';
+let mainTab = 'pending';
+let editingId = null;
+let draft = blankDraft();
+
+function load(){ try{return JSON.parse(localStorage.getItem(KEY))||[]}catch(e){return []} }
+function save(){ localStorage.setItem(KEY, JSON.stringify(orders)) }
+function rupiah(n){ return 'Rp ' + (n||0).toLocaleString('id-ID') }
+function isoDate(ts){ const d=new Date(ts); const p=n=>String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); }
+function fmtDate(s){ if(!s) return ''; const a=s.split('-'); const m=+a[1], d=+a[2];
+  const M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  if(!m||!d) return ''; return d+'-'+M[m-1]; }
+function fmtDateLong(s){ if(!s) return 'Pilih tanggal'; const a=s.split('-').map(Number);
+  const short=fmtDate(s); if(!short) return 'Pilih tanggal';
+  const hari=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const wd=new Date(a[0], a[1]-1, a[2]).getDay();
+  return short+', '+hari[wd]; }
+function blankDraft(){
+  return { name:'', phone:'', addr:'', remarks:'', date: isoDate(Date.now()),
+    menuQty: Object.fromEntries(MENU.map(m=>[m.name,0])),
+    custom: [], paid:false, delivered:false };
+}
+
+/* ---------- LIST ---------- */
+function renderList(){
+  const total = orders.length;
+  const pending = orders.filter(o=>!(o.paid && o.delivered)).length;
+  const done = orders.filter(o=>o.paid && o.delivered).length;
+  const unpaid = orders.filter(o=>!o.paid).length;
+  const undel = orders.filter(o=>!o.delivered).length;
+  cPending.textContent=pending; cDone.textContent=done;
+  cAll.textContent=pending; cUnpaid.textContent=unpaid; cUndel.textContent=undel;
+  countSub.textContent = total===0 ? 'Belum ada pesanan' : total+' pesanan tersimpan';
+
+  let list = orders.slice().reverse();
+  if(mainTab==='done'){
+    list = list.filter(o=>o.paid && o.delivered);
+  } else {
+    list = list.filter(o=>!(o.paid && o.delivered));
+    if(filter==='unpaid') list = list.filter(o=>!o.paid);
+    else if(filter==='undelivered') list = list.filter(o=>!o.delivered);
+  }
+
+  const el = document.getElementById('orderList');
+  if(list.length===0){
+    let msg;
+    if(total===0) msg='Tekan tombol <b>+ Pesanan Baru</b><br>untuk mulai mencatat.';
+    else if(mainTab==='done') msg='Belum ada pesanan yang selesai.';
+    else if(filter==='all') msg='Semua pesanan sudah selesai 🎉';
+    else msg='Tidak ada pesanan di kategori ini.';
+    el.innerHTML = '<div class="empty"><div class="big">🧾</div>'+msg+'</div>';
+    return;
+  }
+  el.innerHTML = list.map(o=>{
+    const items = o.items.map(i=>i.qty+'× '+i.name).join(', ');
+    const isPickup = o.pickup === true || o.remarks === 'Ambil sendiri';
+    const note = (o.remarks && o.remarks !== 'Ambil sendiri') ? o.remarks : '';
+    const destHtml = isPickup
+      ? `<div class="dest"><span class="di">🏠</span>Ambil sendiri</div>`
+      : (o.addr ? `<div class="dest"><span class="di">🛵</span>${esc(o.addr)}</div>` : '');
+    return `<div class="card" onclick="openForm('${o.id}')">
+      <div class="top">
+        <div class="namerow"><span class="name">${esc(o.name||'Tanpa nama')}</span>${o.date?`<span class="datepill">${fmtDate(o.date)}</span>`:''}</div>
+        <span class="total">${rupiah(o.total)}</span></div>
+      <div class="items">${esc(items)||'—'}</div>
+      ${destHtml}
+      ${note?`<div class="cardnote">Catatan: ${esc(note)}</div>`:''}
+      <div class="checks">
+        <span class="check ${o.paid?'paid-on':''}" onclick="event.stopPropagation();togglePaid('${o.id}')">
+          <span class="box">${o.paid?'✓':''}</span>Bayar</span>
+        <span class="check ${o.delivered?'deliver-on':''}" onclick="event.stopPropagation();toggleDelivered('${o.id}')">
+          <span class="box">${o.delivered?'✓':''}</span>Kirim</span>
+      </div></div>`;
+  }).join('');
+}
+function setTab(tab){
+  mainTab=tab;
+  document.querySelectorAll('.maintab').forEach(t=>t.classList.toggle('on',t.dataset.tab===tab));
+  subFilters.style.display = tab==='pending' ? 'flex' : 'none';
+  renderList();
+}
+function esc(s){ return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])) }
+
+/* ---------- Themed dialogs (replace browser alert/confirm) ---------- */
+function appAlert(msg){ return new Promise(res=>{
+  modalMsg.textContent=msg; modalBtns.innerHTML='';
+  const ok=document.createElement('button'); ok.className='mb-ok'; ok.textContent='OK';
+  ok.onclick=()=>{ modal.classList.remove('show'); res(); };
+  modalBtns.appendChild(ok); modal.classList.add('show');
+});}
+function appConfirm(msg, okLabel='OK', danger=false){ return new Promise(res=>{
+  modalMsg.textContent=msg; modalBtns.innerHTML='';
+  const cancel=document.createElement('button'); cancel.className='mb-cancel'; cancel.textContent='Batal';
+  cancel.onclick=()=>{ modal.classList.remove('show'); res(false); };
+  const ok=document.createElement('button'); ok.className='mb-ok'+(danger?' danger':''); ok.textContent=okLabel;
+  ok.onclick=()=>{ modal.classList.remove('show'); res(true); };
+  modalBtns.appendChild(cancel); modalBtns.appendChild(ok); modal.classList.add('show');
+});}
+function showView(el){ [listView,formView,menuView,summaryView].forEach(v=>v&&v.classList.remove('active')); el.classList.add('active'); window.scrollTo(0,0); }
+
+document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+  filter=c.dataset.f;
+  document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x===c));
+  renderList();
+});
+
+/* ---------- FORM ---------- */
+function openForm(id){
+  if(id){
+    const o = orders.find(x=>x.id===id);
+    editingId = id;
+    draft = { name:o.name, phone:o.phone, addr:o.addr, remarks:o.remarks||'',
+      date: o.date || isoDate(o.createdAt||Date.now()),
+      menuQty: Object.fromEntries(MENU.map(m=>[m.name,0])),
+      custom: [], paid:o.paid, delivered:o.delivered };
+    o.items.forEach(it=>{
+      if(draft.menuQty.hasOwnProperty(it.name)) draft.menuQty[it.name]=it.qty;
+      else draft.custom.push({name:it.name, price:it.price, qty:it.qty});
+    });
+    formTitle.textContent='Ubah Pesanan';
+    deleteBtn.style.display='block';
+  } else {
+    editingId=null; draft=blankDraft();
+    formTitle.textContent='Pesanan Baru';
+    deleteBtn.style.display='none';
+  }
+  fName.value=draft.name; fPhone.value=draft.phone; fAddr.value=draft.addr; fRemarks.value=draft.remarks;
+  fDate.value=draft.date; dateText.textContent=fmtDateLong(draft.date);
+  renderMenu(); renderCustom(); updateStatusBtns(); updateTotal();
+  showView(formView);
+}
+function closeForm(){ renderList(); showView(listView); }
+
+fName.oninput=e=>draft.name=e.target.value;
+fPhone.oninput=e=>draft.phone=e.target.value;
+fAddr.oninput=e=>draft.addr=e.target.value;
+fDate.oninput=fDate.onchange=e=>{ draft.date=e.target.value; dateText.textContent=fmtDateLong(draft.date); };
+fRemarks.oninput=e=>draft.remarks=e.target.value;
+
+/* Pick from phone contacts (Android, https only). Shows button only if supported. */
+if(('contacts' in navigator) && ('ContactsManager' in window)){
+  pickContact.style.display='flex';
+  const nw=pickContact.closest('.name-wrap'); if(nw) nw.classList.add('has-btn');
+  pickContact.onclick=async()=>{
+    try{
+      const avail = await navigator.contacts.getProperties();
+      const props = ['name','tel'].filter(p=>avail.includes(p));
+      if(avail.includes('address')) props.push('address');
+      const picked = await navigator.contacts.select(props, {multiple:false});
+      if(!picked || !picked.length) return;
+      const c = picked[0];
+      if(c.name && c.name.length){ draft.name=c.name[0]; fName.value=draft.name; }
+      if(c.tel && c.tel.length){ draft.phone=c.tel[0]; fPhone.value=draft.phone; }
+      if(c.address && c.address.length){
+        const a=c.address[0];
+        const parts=[(a.addressLine||[]).join(' '), a.city, a.region, a.postalCode].filter(Boolean);
+        if(parts.length){ draft.addr=parts.join(', '); fAddr.value=draft.addr; }
+      }
+    }catch(err){ /* user cancelled or unavailable */ }
+  };
+}
+
+// Press-and-hold a +/- button to auto-repeat, speeding up the longer it is held.
+function holdable(btn, step){
+  let to=null, iv=null;
+  const begin=e=>{
+    if(e.button!==undefined && e.button!==0) return;
+    if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    try{ btn.setPointerCapture(e.pointerId); }catch(_){}
+    step();
+    let interval=130, n=0;
+    const tick=()=>{ step(); n++; if(n%5===0 && interval>30) interval=Math.max(30,interval-25); iv=setTimeout(tick,interval); };
+    to=setTimeout(()=>{ iv=setTimeout(tick,interval); }, 300);
+  };
+  const end=()=>{ clearTimeout(to); clearTimeout(iv); to=iv=null; };
+  btn.addEventListener('pointerdown',begin);
+  btn.addEventListener('pointerup',end);
+  btn.addEventListener('pointercancel',end);
+  btn.addEventListener('contextmenu',e=>e.preventDefault());
+}
+
+function renderMenu(){
+  menuList.innerHTML = MENU.map((m,i)=>{
+    const q=draft.menuQty[m.name];
+    return `<div class="item ${q>0?'has':''}" data-mi="${i}">
+      <div class="info"><div class="iname">${m.name}</div>
+        <div class="iprice">${rupiah(m.price)}</div></div>
+      <div class="stepper">
+        <button class="step" data-mi="${i}" data-d="-1">−</button>
+        <span class="qty">${q}</span>
+        <button class="step" data-mi="${i}" data-d="1">+</button>
+      </div></div>`;
+  }).join('');
+  menuList.querySelectorAll('.step').forEach(btn=>holdable(btn,()=>stepMenu(+btn.dataset.mi,+btn.dataset.d)));
+}
+function stepMenu(i,d){
+  const name=MENU[i].name;
+  const v=Math.max(0,(draft.menuQty[name]||0)+d);
+  draft.menuQty[name]=v;
+  const row=menuList.querySelector(`.item[data-mi="${i}"]`);
+  if(row){ row.classList.toggle('has',v>0); row.querySelector('.qty').textContent=v; }
+  updateTotal();
+}
+
+function renderCustom(){
+  customList.innerHTML = draft.custom.map((c,i)=>`
+    <div class="item has" data-ci="${i}" style="flex-wrap:wrap">
+      <div class="custom-row" style="width:100%">
+        <input type="text" placeholder="Nama barang" value="${esc(c.name)}"
+          oninput="setCustom(${i},'name',this.value)">
+        <button class="remove" onclick="rmCustom(${i})">✕</button>
+      </div>
+      <div class="custom-row" style="width:100%;margin-top:8px">
+        <input type="tel" class="price-in" inputmode="numeric" placeholder="Harga"
+          value="${c.price||''}" oninput="setCustom(${i},'price',this.value)">
+        <div class="stepper" style="margin-left:auto">
+          <button class="step" data-ci="${i}" data-d="-1">−</button>
+          <span class="qty">${c.qty}</span>
+          <button class="step" data-ci="${i}" data-d="1">+</button>
+        </div>
+      </div>
+    </div>`).join('');
+  customList.querySelectorAll('.step').forEach(btn=>holdable(btn,()=>stepCustom(+btn.dataset.ci,+btn.dataset.d)));
+}
+function stepCustom(i,d){
+  const c=draft.custom[i]; if(!c) return;
+  c.qty=Math.max(1,c.qty+d);
+  const row=customList.querySelector(`.item[data-ci="${i}"]`);
+  if(row){ const sp=row.querySelector('.qty'); if(sp) sp.textContent=c.qty; }
+  updateTotal();
+}
+function addCustom(){ draft.custom.push({name:'',price:0,qty:1}); renderCustom(); updateTotal(); }
+function setCustom(i,f,v){ draft.custom[i][f]= f==='price'?(parseInt(v.replace(/\D/g,''))||0):v; updateTotal(); }
+function rmCustom(i){ draft.custom.splice(i,1); renderCustom(); updateTotal(); }
+
+function calcItems(){
+  const items=[];
+  MENU.forEach(m=>{ const q=draft.menuQty[m.name]; if(q>0) items.push({name:m.name,price:m.price,qty:q}); });
+  draft.custom.forEach(c=>{ if(c.name.trim()&&c.qty>0) items.push({name:c.name.trim(),price:c.price,qty:c.qty}); });
+  return items;
+}
+function calcTotal(){ return calcItems().reduce((s,i)=>s+i.price*i.qty,0); }
+function updateTotal(){ formTotal.textContent=rupiah(calcTotal()); }
+
+function toggleStatus(which){
+  if(which==='paid') draft.paid=!draft.paid; else draft.delivered=!draft.delivered;
+  updateStatusBtns();
+}
+function updateStatusBtns(){
+  tPaid.classList.toggle('paid-on',draft.paid);
+  tPaid.querySelector('.box').textContent = draft.paid?'✓':'';
+  tDeliver.classList.toggle('deliver-on',draft.delivered);
+  tDeliver.querySelector('.box').textContent = draft.delivered?'✓':'';
+}
+function togglePaid(id){ const o=orders.find(x=>x.id===id); if(o){ o.paid=!o.paid; save(); renderList(); } }
+function toggleDelivered(id){ const o=orders.find(x=>x.id===id); if(o){ o.delivered=!o.delivered; save(); renderList(); } }
+
+async function saveOrder(){
+  const items=calcItems();
+  if(items.length===0){ await appAlert('Belum ada barang yang dipilih.'); return; }
+  if(!draft.name.trim()){ await appAlert('Isi nama pemesan dulu ya.'); fName.focus(); return; }
+  const existing = editingId ? orders.find(o=>o.id===editingId) : null;
+  const data={ id:editingId||('o'+Date.now()), name:draft.name.trim(),
+    phone:draft.phone.trim(), addr:draft.addr.trim(), date:draft.date, items,
+    total:calcTotal(), paid:draft.paid, delivered:draft.delivered, remarks:draft.remarks.trim(),
+    createdAt: (existing && existing.createdAt) || Date.now() };
+  if(editingId){ const idx=orders.findIndex(o=>o.id===editingId); orders[idx]=data; }
+  else orders.push(data);
+  save(); closeForm();
+}
+async function deleteOrder(){
+  if(await appConfirm('Hapus pesanan ini? Tidak bisa dikembalikan.','Hapus',true)){
+    orders=orders.filter(o=>o.id!==editingId); save(); closeForm();
+  }
+}
+
+/* ---------- MENU EDITOR ---------- */
+let menuDraft=[];
+function openMenuEditor(){
+  menuDraft = MENU.map(m=>({name:m.name, price:m.price}));
+  renderMenuEdit();
+  showView(menuView);
+}
+function closeMenuEditor(){ showView(listView); }
+function renderMenuEdit(){
+  menuEditList.innerHTML = menuDraft.map((m,i)=>`
+    <div class="item has" style="flex-wrap:wrap">
+      <div class="custom-row" style="width:100%">
+        <input type="text" placeholder="Nama barang" value="${esc(m.name)}"
+          oninput="setMenu(${i},'name',this.value)">
+        <button class="remove" onclick="rmMenu(${i})">✕</button>
+      </div>
+      <div class="custom-row" style="width:100%;margin-top:8px">
+        <span style="font-weight:800;color:var(--muted);min-width:36px">Rp</span>
+        <input type="tel" class="price-in" inputmode="numeric" placeholder="Harga jual"
+          value="${m.price||''}" oninput="setMenu(${i},'price',this.value)">
+      </div>
+    </div>`).join('');
+}
+function setMenu(i,f,v){ menuDraft[i][f]= (f==='price')?(parseInt(v.replace(/\D/g,''))||0):v; }
+async function rmMenu(i){ if(await appConfirm('Hapus barang ini dari menu?','Hapus',true)){ menuDraft.splice(i,1); renderMenuEdit(); } }
+function addMenuItem(){ menuDraft.push({name:'',price:0}); renderMenuEdit(); }
+async function saveMenuEditor(){
+  const cleaned = menuDraft.filter(m=>m.name.trim()).map(m=>({name:m.name.trim(),price:m.price||0}));
+  if(cleaned.length===0){ await appAlert('Menu tidak boleh kosong.'); return; }
+  MENU = cleaned; saveMenu(); closeMenuEditor();
+}
+async function shareOrderForm(){
+  const cleaned = menuDraft.filter(m=>m.name.trim()).map(m=>({name:m.name.trim(),price:m.price||0}));
+  if(cleaned.length===0){ await appAlert('Menu tidak boleh kosong.'); return; }
+  MENU = cleaned; saveMenu();
+  const code = encodeURIComponent(btoa(unescape(encodeURIComponent(JSON.stringify(cleaned)))));
+  const dir = location.href.replace(/[#?].*$/,'').replace(/[^/]*$/,'');
+  const link = dir + 'pesan.html?m=' + code;
+  try{
+    if(navigator.share){ await navigator.share({title:'Form Pesanan LINDA SIM', text:'Pesan kue LINDA SIM di sini:', url:link}); return; }
+  }catch(e){ if(e && e.name==='AbortError') return; }
+  try{ await navigator.clipboard.writeText(link); await appAlert('Link form pesanan sudah disalin. Tinggal tempel di WhatsApp/grup untuk dibagikan.'); return; }catch(e){}
+  await appAlert(link);
+}
+
+/* ---------- SUMMARY ---------- */
+const MONTHS_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+let summaryMonth = new Date();
+function orderDate(o){ return new Date(o.createdAt || parseInt(String(o.id).replace(/\D/g,'')) || Date.now()); }
+
+function openSummary(){
+  summaryMonth = new Date();
+  renderSummary();
+  showView(summaryView);
+}
+function closeSummary(){ showView(listView); }
+function changeMonth(d){ summaryMonth.setMonth(summaryMonth.getMonth()+d); renderSummary(); }
+
+function renderSummary(){
+  const prep={}; let prepTotal=0;
+  orders.filter(o=>!o.delivered).forEach(o=>o.items.forEach(it=>{ prep[it.name]=(prep[it.name]||0)+it.qty; prepTotal+=it.qty; }));
+  const names=Object.keys(prep).sort((a,b)=>prep[b]-prep[a]);
+  prepList.innerHTML = names.length
+    ? names.map(n=>`<div class="preprow"><span>${esc(n)}</span><b>${prep[n]}</b></div>`).join('')
+      + `<div class="preprow" style="border-color:var(--primary)"><span><b>Total barang</b></span><b>${prepTotal}</b></div>`
+    : '<div class="preprow"><span>Semua pesanan sudah dikirim 🎉</span></div>';
+
+  const y=summaryMonth.getFullYear(), m=summaryMonth.getMonth();
+  monthLabel.textContent = MONTHS_ID[m]+' '+y;
+  const monthly = orders.filter(o=>{ const d=orderDate(o); return d.getFullYear()===y && d.getMonth()===m; });
+  let revenue=0;
+  monthly.forEach(o=>{ revenue+=o.total||0; });
+  const paidCount=monthly.filter(o=>o.paid).length;
+  let html='';
+  html+=`<div class="statrow"><span class="lbl">Jumlah pesanan</span><span class="val">${monthly.length}</span></div>`;
+  html+=`<div class="statrow"><span class="lbl">Sudah dibayar</span><span class="val">${paidCount} / ${monthly.length}</span></div>`;
+  html+=`<div class="statrow big"><span class="lbl">Total penjualan</span><span class="val">${rupiah(revenue)}</span></div>`;
+  monthStats.innerHTML = html;
+}
+
+/* ---------- Backup / Restore ---------- */
+function exportData(){
+  const data={ app:'LindaSim', version:1, exportedAt:new Date().toISOString(), orders:orders, menu:MENU };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const d=new Date(), pad=n=>String(n).padStart(2,'0');
+  const a=document.createElement('a');
+  a.href=url; a.download='LindaSim-cadangan-'+d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+importFile.addEventListener('change', async e=>{
+  const file=e.target.files && e.target.files[0]; e.target.value='';
+  if(!file) return;
+  let parsed;
+  try{ parsed=JSON.parse(await file.text()); }
+  catch(err){ await appAlert('Berkas tidak bisa dibaca.'); return; }
+  if(!parsed || !Array.isArray(parsed.orders)){ await appAlert('Berkas cadangan tidak sesuai.'); return; }
+  const ok=await appConfirm('Pulihkan data dari berkas ini? Semua data sekarang akan diganti.','Pulihkan',true);
+  if(!ok) return;
+  orders=parsed.orders;
+  if(Array.isArray(parsed.menu) && parsed.menu.length){ MENU=parsed.menu; saveMenu(); }
+  save(); renderList(); renderSummary();
+  await appAlert('Data berhasil dipulihkan: '+orders.length+' pesanan.');
+});
+
+/* Ask the browser to keep this data and not evict it under storage pressure (silent) */
+if(navigator.storage && navigator.storage.persist){ navigator.storage.persist().catch(()=>{}); }
+
+/* ---------- PWA: install prompt + service worker (manifest & icons are real files) ---------- */
+(function setupPWA(){
+
+  if('serviceWorker' in navigator){
+    window.addEventListener('load', ()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+  }
+
+  let deferred=null;
+  const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  window.addEventListener('beforeinstallprompt', e=>{
+    e.preventDefault(); deferred=e;
+    if(!standalone && !localStorage.getItem('installDismissed')) installBar.classList.add('show');
+  });
+  installGo.onclick=async()=>{
+    if(!deferred){
+      await appAlert('Untuk memasang: buka menu Chrome (⋮ di kanan atas) lalu pilih “Pasang aplikasi” / “Install app”.');
+      return;
+    }
+    deferred.prompt();
+    try{ await deferred.userChoice; }catch(e){}
+    deferred=null; installBar.classList.remove('show');
+  };
+  installX.onclick=()=>{ installBar.classList.remove('show'); localStorage.setItem('installDismissed','1'); };
+  window.addEventListener('appinstalled', ()=>{ installBar.classList.remove('show'); });
+})();
+
+/* ---------- Import an order arriving from the customer form link (?o=) ---------- */
+async function checkImport(){
+  const raw = new URLSearchParams(location.search).get('o');
+  if(!raw) return;
+  try{ history.replaceState(null,'', location.pathname); }catch(e){}
+  let o; try{ o = JSON.parse(decodeURIComponent(escape(atob(raw)))); }catch(e){ return; }
+  if(!o || !Array.isArray(o.items) || !o.items.length) return;
+  const lines = o.items.map(it=>it.qty+'\u00D7 '+it.name).join(', ');
+  const total = o.total || o.items.reduce((s,it)=>s+(it.price||0)*(it.qty||0),0);
+  const ok = await appConfirm('Tambah pesanan dari '+(o.name||'pelanggan')+'?  '+lines+' \u2014 Total '+rupiah(total), 'Tambah');
+  if(!ok) return;
+  const data = { id:'o'+Date.now(), name:(o.name||'').trim(), phone:(o.phone||'').trim(),
+    addr:(o.addr||'').trim(), date:o.date||isoDate(Date.now()), items:o.items, total,
+    pickup: !!o.pickup, paid:false, delivered:false, remarks:(o.remarks||'').trim(), createdAt:Date.now() };
+  orders.push(data); save(); renderList();
+  await appAlert('Pesanan dari '+(data.name||'pelanggan')+' sudah ditambahkan. \u2705');
+}
+
+renderList();
+checkImport();
+</script>
+</body>
+</html>
